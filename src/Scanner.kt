@@ -50,39 +50,21 @@ class Scanner(val src: String) {
             '+' -> addToken(PLUS)
             ';' -> addToken(SEMICOLON)
             '*' -> addToken(STAR)
-            '!' -> addToken(if (match('=')) {
-                BANG_EQUAL
-            } else {
-                BANG
-            })
-            '=' -> addToken(if (match('=')) {
-                EQUAL_EQUAL
-            } else {
-                EQUAL
-            })
-            '<' -> addToken(if (match('=')) {
-                LESS_EQUAL
-            } else {
-                LESS
-            })
-            '>' -> addToken(if (match('=')) {
-                GREATER_EQUAL
-            } else {
-                GREATER
-            })
+            '!' -> addToken(if (match('=')) BANG_EQUAL else BANG)
+            '=' -> addToken(if (match('=')) EQUAL_EQUAL else EQUAL)
+            '<' -> addToken(if (match('=')) LESS_EQUAL else LESS)
+            '>' -> addToken(if (match('=')) GREATER_EQUAL else GREATER)
             '/' -> when {
                 match('/') -> while (peek() != '\n' && !isAtEnd()) {
                     advance()
                 }
                 match('*') -> {
-                    while (!isAtEnd() && peek() != '*' && peekNext() != '/') {
+                    while (!isAtEnd() && !(match('*') && match('/'))) {
                         if (peek() == '\n') {
                             line++
                         }
                         advance()
                     }
-                    advance()
-                    advance()
                 }
                 else -> addToken(SLASH)
             }
@@ -90,12 +72,10 @@ class Scanner(val src: String) {
             ' ', '\t', '\r' -> {
             }
             '"' -> string()
-            else -> if (c.isDigit()) {
-                number()
-            } else if (isAlpha(c)) {
-                identifier()
-            } else {
-                error(line, "Unexpected character.")
+            else -> when { 
+                c.isDigit() -> number()
+                isAlpha(c) -> identifier()
+                else -> error(line, "Unexpected character.")
             }
         }
     }
