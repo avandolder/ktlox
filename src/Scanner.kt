@@ -72,7 +72,7 @@ class Scanner(val src: String) {
             ' ', '\t', '\r' -> {
             }
             '"' -> string()
-            else -> when { 
+            else -> when {
                 c.isDigit() -> number()
                 isAlpha(c) -> identifier()
                 else -> error(line, "Unexpected character.")
@@ -134,19 +134,9 @@ class Scanner(val src: String) {
                 false
             }
 
-    private fun peek() =
-            if (isAtEnd()) {
-                '\u0000'
-            } else {
-                src[curr]
-            }
+    private fun peek() = if (isAtEnd()) '\u0000' else src[curr]
 
-    private fun peekNext() =
-            if (curr + 1 >= src.length) {
-                '\u0000'
-            } else {
-                src[curr + 1]
-            }
+    private fun peekNext() = if (curr + 1 >= src.length) '\u0000' else src[curr + 1]
 
     private fun isAlpha(c: Char) = c.isLetter() || c == '_'
 
@@ -156,8 +146,6 @@ class Scanner(val src: String) {
 
     private fun advance() = src[curr++]
 
-    private fun addToken(type: TokenType, literal: Any? = null) {
-        val text = src.substring(start, curr)
-        tokens.add(Token(type, text, literal, line))
-    }
+    private fun addToken(type: TokenType, literal: Any? = null) =
+            tokens.add(Token(type, src.substring(start, curr), literal, line))
 }
