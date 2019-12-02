@@ -2,7 +2,7 @@ package com.craftinginterpreters.lox
 
 import com.craftinginterpreters.lox.TokenType.*
 
-class Scanner(val src: String) {
+class Scanner(private val src: String) {
     private val tokens = mutableListOf<Token>()
     private var start = 0
     private var curr = 0

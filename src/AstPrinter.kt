@@ -20,9 +20,9 @@ class AstPrinter : Expr.Visitor<String> {
         val builder = StringBuilder()
         builder.append("($name")
         for (expr in exprs) {
-                builder.append(" ${expr.accept(this)}")
+            builder.append(" ${expr.accept(this)}")
         }
         builder.append(")")
         return builder.toString()
-     }
+    }
 }
