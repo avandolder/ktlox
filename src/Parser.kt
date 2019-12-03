@@ -93,6 +93,12 @@ class Parser(private val tokens: List<Token>) {
             val operator = previous()
             val right = unary()
             return Unary(operator, right)
+        } else if (match(BANG_EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL,
+                        LESS, LESS_EQUAL, MINUS, PLUS, SLASH, STAR)) {
+            val operator = previous()
+            // Parse and discard any following unary expression.
+            unary()
+            throw parseError(operator, "Unary '${operator.lexeme}' expressions are not supported.")
         }
 
         return primary()
@@ -124,7 +130,7 @@ class Parser(private val tokens: List<Token>) {
     private fun consume(type: TokenType, msg: String) =
             if (check(type)) advance() else throw parseError(peek(), msg)
 
-    private fun check(type: TokenType) = if (isAtEnd()) false else peek().type == type
+    private fun check(type: TokenType) = !isAtEnd() && peek().type == type
 
     private fun advance(): Token {
         if (!isAtEnd()) {
