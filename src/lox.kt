@@ -51,9 +51,8 @@ fun report(line: Int, where: String, msg: String) {
     hadError = true
 }
 
-fun error(token: Token, msg: String) =
-        if (token.type == TokenType.EOF) {
-            report(token.line, " at end", msg)
-        } else {
-            report(token.line, " at '${token.lexeme}'", msg)
-        }
+fun error(token: Token, msg: String) = if (token.type == TokenType.EOF) {
+    report(token.line, " at end", msg)
+} else {
+    report(token.line, " at '${token.lexeme}'", msg)
+}

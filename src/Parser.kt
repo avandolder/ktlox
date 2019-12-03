@@ -9,12 +9,11 @@ class Parser(private val tokens: List<Token>) {
 
     private var curr = 0
 
-    fun parse(): Expr? =
-            try {
-                expressionList()
-            } catch (error: ParseError) {
-                null
-            }
+    fun parse(): Expr? = try {
+        expressionList()
+    } catch (error: ParseError) {
+        null
+    }
 
     // expressionList -> expression ( "," expression )*
     private fun expressionList(): Expr {
@@ -104,19 +103,18 @@ class Parser(private val tokens: List<Token>) {
         return primary()
     }
 
-    private fun primary(): Expr =
-            when {
-                match(FALSE) -> Literal(false)
-                match(TRUE) -> Literal(true)
-                match(NIL) -> Literal(null)
-                match(NUMBER, STRING) -> Literal(previous().literal)
-                match(LEFT_PAREN) -> {
-                    val expr = expression()
-                    consume(RIGHT_PAREN, "Expect ')' after expression.")
-                    Grouping(expr)
-                }
-                else -> throw parseError(peek(), "Expect expression.")
-            }
+    private fun primary(): Expr = when {
+        match(FALSE) -> Literal(false)
+        match(TRUE) -> Literal(true)
+        match(NIL) -> Literal(null)
+        match(NUMBER, STRING) -> Literal(previous().literal)
+        match(LEFT_PAREN) -> {
+            val expr = expression()
+            consume(RIGHT_PAREN, "Expect ')' after expression.")
+            Grouping(expr)
+        }
+        else -> throw parseError(peek(), "Expect expression.")
+    }
 
     private fun match(vararg types: TokenType): Boolean {
         if (types.any(::check)) {

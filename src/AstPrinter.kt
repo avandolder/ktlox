@@ -30,11 +30,10 @@ class AstPrinter : Expr.Visitor<String> {
     }
 }
 
-fun convertToRpn(expr: Expr): String =
-        when (expr) {
-            is Expr.Binary -> "${convertToRpn(expr.left)} ${convertToRpn(expr.right)} ${expr.operator.lexeme}"
-            is Expr.Grouping -> convertToRpn(expr.expression)
-            is Expr.Literal -> if (expr.value == null) "null" else expr.value.toString()
-            is Expr.Unary -> "${convertToRpn(expr.right)} ${expr.operator.lexeme}"
-            is Expr.Ternary -> ""
-        }
+fun convertToRpn(expr: Expr): String = when (expr) {
+    is Expr.Binary -> "${convertToRpn(expr.left)} ${convertToRpn(expr.right)} ${expr.operator.lexeme}"
+    is Expr.Grouping -> convertToRpn(expr.expression)
+    is Expr.Literal -> if (expr.value == null) "null" else expr.value.toString()
+    is Expr.Unary -> "${convertToRpn(expr.right)} ${expr.operator.lexeme}"
+    is Expr.Ternary -> ""
+}

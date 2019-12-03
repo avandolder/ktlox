@@ -128,13 +128,12 @@ class Scanner(private val src: String) {
         addToken(STRING, src.substring(start + 1, curr - 1))
     }
 
-    private fun match(expected: Char) =
-            if (!isAtEnd() && src[curr] == expected) {
-                curr++
-                true
-            } else {
-                false
-            }
+    private fun match(expected: Char) = if (!isAtEnd() && src[curr] == expected) {
+        curr++
+        true
+    } else {
+        false
+    }
 
     private fun peek() = if (isAtEnd()) '\u0000' else src[curr]
 
