@@ -31,7 +31,16 @@ fun runPrompt() {
     }
 }
 
-fun run(src: String) = Scanner(src).scanTokens().forEach { println(it) }
+fun run(src: String) {
+    val tokens = Scanner(src).scanTokens()
+    val expr = Parser(tokens).parse()
+
+    if (hadError) {
+        return
+    }
+
+    println(AstPrinter().print(expr!!))
+}
 
 fun error(line: Int, msg: String) = report(line, "", msg)
 
@@ -39,3 +48,10 @@ fun report(line: Int, where: String, msg: String) {
     println("[line $line] Error$where: $msg")
     hadError = true
 }
+
+fun error(token: Token, msg: String) =
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", msg)
+        } else {
+            report(token.line, " at '${token.lexeme}'", msg)
+        }
