@@ -11,10 +11,21 @@ class Parser(private val tokens: List<Token>) {
 
     fun parse(): Expr? =
             try {
-                expression()
+                expressionList()
             } catch (error: ParseError) {
                 null
             }
+
+    // expressionList -> expression ( "," expression )*
+    private fun expressionList(): Expr {
+        var expr = expression()
+
+        while (match(COMMA)) {
+            expr = expression()
+        }
+
+        return expr
+    }
 
     private fun expression() = equality()
 
