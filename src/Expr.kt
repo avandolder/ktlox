@@ -6,6 +6,7 @@ sealed class Expr {
         fun visitGroupingExpr(expr: Grouping): R
         fun visitLiteralExpr(expr: Literal): R
         fun visitUnaryExpr(expr: Unary): R
+        fun visitTernaryExpr(expr: Ternary): R
     }
 
     abstract fun <R> accept(visitor: Visitor<R>): R
@@ -28,5 +29,10 @@ sealed class Expr {
     data class Unary(val operator: Token, val right: Expr) : Expr() {
         override fun <R> accept(visitor: Visitor<R>): R =
                 visitor.visitUnaryExpr(this)
+    }
+
+    data class Ternary(val condition: Expr, val left: Expr, val right: Expr) : Expr() {
+        override fun <R> accept(visitor: Visitor<R>): R =
+                visitor.visitTernaryExpr(this)
     }
 }

@@ -16,6 +16,9 @@ class AstPrinter : Expr.Visitor<String> {
     override fun visitUnaryExpr(expr: Expr.Unary): String =
             parenthesize(expr.operator.lexeme, expr.right)
 
+    override fun visitTernaryExpr(expr: Expr.Ternary): String =
+            parenthesize("ternary", expr.condition, expr.left, expr.right)
+
     private fun parenthesize(name: String, vararg exprs: Expr): String {
         val builder = StringBuilder()
         builder.append("($name")
@@ -33,4 +36,5 @@ fun convertToRpn(expr: Expr): String =
             is Expr.Grouping -> convertToRpn(expr.expression)
             is Expr.Literal -> if (expr.value == null) "null" else expr.value.toString()
             is Expr.Unary -> "${convertToRpn(expr.right)} ${expr.operator.lexeme}"
+            is Expr.Ternary -> ""
         }

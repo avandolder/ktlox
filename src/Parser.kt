@@ -27,7 +27,20 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun expression() = equality()
+    private fun expression() = ternary()
+
+    private fun ternary(): Expr {
+        var expr = equality()
+
+        if (match(QUESTION)) {
+            val left = expression()
+            match(COLON)
+            val right = expression()
+            expr = Ternary(expr, left, right)
+        }
+
+        return expr
+    }
 
     private fun equality(): Expr {
         var expr = comparison()
