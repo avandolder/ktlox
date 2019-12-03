@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
         0 -> runPrompt()
         1 -> runFile(args[0])
         else -> {
-            println("Usage: jlox [script]")
+            println("Usage: lox [script]")
             exitProcess(64)
         }
     }
@@ -28,6 +28,7 @@ fun runPrompt() {
     while (true) {
         print("> ")
         run(readLine()!!)
+        hadError = false
     }
 }
 
@@ -40,6 +41,7 @@ fun run(src: String) {
     }
 
     println(AstPrinter().print(expr!!))
+    println(evaluate(expr!!)!!)
 }
 
 fun error(line: Int, msg: String) = report(line, "", msg)
