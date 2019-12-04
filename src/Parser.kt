@@ -9,10 +9,12 @@ class Parser(private val tokens: List<Token>) {
 
     private var curr = 0
 
-    fun parse(): Expr? = try {
-        expressionList()
-    } catch (error: ParseError) {
-        null
+    fun parse(): List<Stmt> {
+        val stmts = mutableListOf<Stmt>()
+        while (!isAtEnd()) {
+            stmts.add(statement())
+        }
+        return stmts
     }
 
     // expressionList -> expression ( "," expression )*
@@ -27,6 +29,20 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun expression() = ternary()
+
+    private fun statement() = if (match(PRINT)) printStatement() else expressionStatement()
+
+    private fun printStatement(): Stmt {
+        val value = expression()
+        consume(SEMICOLON, "Expect ';' after value.")
+        return Stmt.Print(value)
+    }
+
+    private fun expressionStatement(): Stmt {
+        val expr = expression()
+        consume(SEMICOLON, "Expect ';' after expression.")
+        return Stmt.Expression(expr)
+    }
 
     private fun ternary(): Expr {
         var expr = equality()

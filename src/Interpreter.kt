@@ -1,8 +1,7 @@
 package com.craftinginterpreters.lox
 
-fun interpret(expr: Expr) = try {
-    val value = evaluate(expr)
-    println(stringify(value))
+fun interpret(stmts: List<Stmt>) = try {
+    stmts.forEach(::execute)
 } catch (error: RuntimeError) {
     runtimeError(error)
 }
@@ -73,6 +72,13 @@ fun evaluate(expr: Expr): Any? = when (expr) {
         } else {
             evaluate(expr.right)
         }
+    }
+}
+
+fun execute(stmt: Stmt) {
+    when (stmt) {
+        is Stmt.Expression -> evaluate(stmt.expr)
+        is Stmt.Print -> println(stringify(evaluate(stmt.expr)))
     }
 }
 
