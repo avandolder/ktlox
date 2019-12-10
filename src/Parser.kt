@@ -31,7 +31,7 @@ class Parser(private val tokens: List<Token>) {
         return expr
     }
 
-    private fun expression() = ternary()
+    private fun expression() = assignment()
 
     private fun declaration(): Stmt? = try {
         if (match(VAR)) {
@@ -63,6 +63,23 @@ class Parser(private val tokens: List<Token>) {
         val expr = expression()
         consume(SEMICOLON, "Expect ';' after expression.")
         return Stmt.Expression(expr)
+    }
+
+    private fun assignment(): Expr {
+        val expr = equality()
+
+        if (match(EQUAL)) {
+            val equals = previous()
+            val value = assignment()
+
+            if (expr is Variable) {
+                return Assign(expr.name, value)
+            }
+
+            error(equals, "Invalid assignment target.")
+        }
+
+        return expr
     }
 
     private fun ternary(): Expr {

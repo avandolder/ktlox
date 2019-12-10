@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 }
 
 fun runFile(path: String) {
-    run(File(path).readText(Charsets.UTF_8))
+    run(File(path).readText(Charsets.UTF_8), Interpreter())
 
     when {
         hadError -> exitProcess(65)
@@ -27,14 +27,16 @@ fun runFile(path: String) {
 }
 
 fun runPrompt() {
+    val interpreter = Interpreter()
+
     while (true) {
         print("> ")
-        run(readLine()!!)
+        run(readLine()!!, interpreter)
         hadError = false
     }
 }
 
-fun run(src: String) {
+fun run(src: String, interpreter: Interpreter) {
     val tokens = Scanner(src).scanTokens()
     val stmts = Parser(tokens).parse()
 
@@ -42,7 +44,7 @@ fun run(src: String) {
         return
     }
 
-    interpret(stmts)
+    interpreter.interpret(stmts)
 }
 
 fun error(line: Int, msg: String) = report(line, "", msg)
