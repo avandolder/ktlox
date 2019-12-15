@@ -1,7 +1,7 @@
 package com.craftinginterpreters.lox
 
 class Interpreter {
-    private val env = Environment()
+    private var env = Environment()
 
     fun interpret(stmts: List<Stmt>) = try {
         stmts.forEach(::execute)
@@ -86,12 +86,23 @@ class Interpreter {
 
     private fun execute(stmt: Stmt) {
         when (stmt) {
+            is Stmt.Block -> executeBlock(stmt.stmts, Environment(env))
             is Stmt.Expression -> evaluate(stmt.expr)
             is Stmt.Print -> println(stringify(evaluate(stmt.expr)))
             is Stmt.Var -> {
                 val init = if (stmt.init != null) evaluate(stmt.init) else null
                 env.define(stmt.name.lexeme, init)
             }
+        }
+    }
+
+    fun executeBlock(stmts: List<Stmt>, env: Environment) {
+        val prev = this.env
+        try {
+            this.env = env
+            stmts.forEach(::execute)
+        } finally {
+            this.env = prev
         }
     }
 }
