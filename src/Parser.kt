@@ -45,9 +45,51 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun statement() = when {
+        match(FOR) -> forStatement()
+        match(IF) -> ifStatement()
         match(PRINT) -> printStatement()
+        match(WHILE) -> whileStatement()
         match(LEFT_BRACE) -> Stmt.Block(block())
         else -> expressionStatement()
+    }
+
+    private fun forStatement(): Stmt {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.")
+
+        val initializer = when {
+            match(SEMICOLON) -> null
+            match(VAR) -> varDeclaration()
+            else -> expressionStatement()
+        }
+
+        val condition = if (!check(SEMICOLON)) expression() else Literal(true)
+        consume(SEMICOLON, "Expect ';' after loop condition.")
+
+        val increment = if (!check(RIGHT_PAREN)) expression() else null
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.")
+
+        var body = statement()
+        if (increment != null) {
+            body = Stmt.Block(listOf(body, Stmt.Expression(increment)))
+        }
+
+        body = Stmt.While(condition, body)
+
+        if (initializer != null) {
+            body = Stmt.Block(listOf(initializer, body))
+        }
+
+        return body
+    }
+
+    private fun ifStatement(): Stmt {
+        consume(LEFT_PAREN, "Expect '(' after 'if'.")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expect ')' after if condition.")
+
+        val thenBranch = statement()
+        val elseBranch = if (match(ELSE)) statement() else null
+        return Stmt.If(condition, thenBranch, elseBranch)
     }
 
     private fun printStatement(): Stmt {
@@ -61,6 +103,14 @@ class Parser(private val tokens: List<Token>) {
         val init = if (match(EQUAL)) expression() else null
         consume(SEMICOLON, "Expect ';' after variable declaration.")
         return Stmt.Var(name, init)
+    }
+
+    private fun whileStatement(): Stmt {
+        consume(LEFT_PAREN, "Expect '(' after 'while'.")
+        val condition = expression()
+        consume(RIGHT_PAREN, "Expect ')' after condition.")
+        val body = statement()
+        return Stmt.While(condition, body)
     }
 
     private fun expressionStatement(): Stmt {
@@ -84,7 +134,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun assignment(): Expr {
-        val expr = equality()
+        val expr = or()
 
         if (match(EQUAL)) {
             val equals = previous()
@@ -95,6 +145,30 @@ class Parser(private val tokens: List<Token>) {
             }
 
             error(equals, "Invalid assignment target.")
+        }
+
+        return expr
+    }
+
+    private fun or(): Expr {
+        var expr = and()
+
+        while (match(OR)) {
+            val operator = previous()
+            val right = and()
+            expr = Logical(expr, operator, right)
+        }
+
+        return expr
+    }
+
+    private fun and(): Expr {
+        var expr = equality()
+
+        while (match(AND)) {
+            val operator = previous()
+            val right = equality()
+            expr = Logical(expr, operator, right)
         }
 
         return expr

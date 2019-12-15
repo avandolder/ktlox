@@ -11,6 +11,14 @@ class Interpreter {
 
     private fun evaluate(expr: Expr): Any? = when (expr) {
         is Expr.Literal -> expr.value
+        is Expr.Logical -> {
+            val left = evaluate(expr.left)
+            when {
+                expr.operator.type == TokenType.OR && isTruthy(left) -> left
+                !isTruthy(left) -> left
+                else -> evaluate(expr.right)
+            }
+        }
         is Expr.Grouping -> evaluate(expr.expression)
         is Expr.Unary -> {
             val right = evaluate(expr.right)
@@ -84,15 +92,25 @@ class Interpreter {
         }
     }
 
-    private fun execute(stmt: Stmt) {
-        when (stmt) {
-            is Stmt.Block -> executeBlock(stmt.stmts, Environment(env))
-            is Stmt.Expression -> evaluate(stmt.expr)
-            is Stmt.Print -> println(stringify(evaluate(stmt.expr)))
-            is Stmt.Var -> {
-                val init = if (stmt.init != null) evaluate(stmt.init) else null
-                env.define(stmt.name.lexeme, init)
+    private fun execute(stmt: Stmt): Unit = when (stmt) {
+        is Stmt.Block -> executeBlock(stmt.stmts, Environment(env))
+        is Stmt.Expression -> {
+            evaluate(stmt.expr)
+            Unit
+        }
+        is Stmt.If -> when {
+            isTruthy(evaluate(stmt.condition)) -> execute(stmt.thenBranch)
+            stmt.elseBranch != null -> execute(stmt.elseBranch)
+            else -> {
             }
+        }
+        is Stmt.Print -> println(stringify(evaluate(stmt.expr)))
+        is Stmt.Var -> {
+            val init = if (stmt.init != null) evaluate(stmt.init) else null
+            env.define(stmt.name.lexeme, init)
+        }
+        is Stmt.While -> while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body)
         }
     }
 

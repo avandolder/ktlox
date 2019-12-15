@@ -1,7 +1,7 @@
 package com.craftinginterpreters.lox
 
 class Environment(val enclosing: Environment? = null) {
-    private val values: MutableMap<String, Any?> = mutableMapOf()
+    private val values = mutableMapOf<String, Any?>()
 
     fun get(name: Token): Any? = when {
         values.containsKey(name.lexeme) -> values[name.lexeme]
