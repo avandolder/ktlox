@@ -1,7 +1,16 @@
 package com.craftinginterpreters.lox
 
 class Interpreter {
-    private var env = Environment()
+    val globals = Environment()
+    private var env = globals
+
+    init {
+        globals.define("clock", object : LoxCallable {
+            override fun arity() = 0
+            override fun call(interpreter: Interpreter, args: List<Any?>): Any? = System.currentTimeMillis() / 1000.0
+            override fun toString() = "<native fn>"
+        })
+    }
 
     fun interpret(stmts: List<Stmt>) = try {
         stmts.forEach(::execute)
@@ -76,6 +85,18 @@ class Interpreter {
                 else -> null
             }
         }
+        is Expr.Call -> {
+            val callee = evaluate(expr.callee)
+            val args = expr.args.map(::evaluate)
+            if (callee is LoxCallable) {
+                if (args.size != callee.arity()) {
+                    throw RuntimeError(expr.paren, "Expected ${callee.arity()} arguments but got ${args.size}.")
+                }
+                callee.call(this, args)
+            } else {
+                throw RuntimeError(expr.paren, "Can only call functions and classes.")
+            }
+        }
         is Expr.Ternary -> {
             val condition = evaluate(expr.condition)
             if (isTruthy(condition)) {
@@ -98,6 +119,10 @@ class Interpreter {
             evaluate(stmt.expr)
             Unit
         }
+        is Stmt.Function -> {
+            val function = LoxFunction(stmt, env)
+            env.define(stmt.name.lexeme, function)
+        }
         is Stmt.If -> when {
             isTruthy(evaluate(stmt.condition)) -> execute(stmt.thenBranch)
             stmt.elseBranch != null -> execute(stmt.elseBranch)
@@ -105,6 +130,7 @@ class Interpreter {
             }
         }
         is Stmt.Print -> println(stringify(evaluate(stmt.expr)))
+        is Stmt.Return -> throw Return(if (stmt.value != null) evaluate(stmt.value) else null)
         is Stmt.Var -> {
             val init = if (stmt.init != null) evaluate(stmt.init) else null
             env.define(stmt.name.lexeme, init)

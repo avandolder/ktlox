@@ -3,6 +3,7 @@ package com.craftinginterpreters.lox
 fun printAst(expr: Expr): String = when (expr) {
     is Expr.Assign -> parenthesize("assign", Expr.Literal(expr.name.lexeme), expr.value)
     is Expr.Binary -> parenthesize(expr.operator.lexeme, expr.left, expr.right)
+    is Expr.Call -> parenthesize("call", expr.callee, *expr.args.toTypedArray())
     is Expr.Grouping -> parenthesize("group", expr.expression)
     is Expr.Literal -> if (expr.value == null) "nil" else expr.value.toString()
     is Expr.Logical -> parenthesize(expr.operator.lexeme, expr.left, expr.right)

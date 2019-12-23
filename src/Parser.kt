@@ -2,7 +2,6 @@ package com.craftinginterpreters.lox
 
 import com.craftinginterpreters.lox.Expr.*
 import com.craftinginterpreters.lox.TokenType.*
-import java.lang.RuntimeException
 
 class Parser(private val tokens: List<Token>) {
     private class ParseError : RuntimeException()
@@ -34,10 +33,10 @@ class Parser(private val tokens: List<Token>) {
     private fun expression() = assignment()
 
     private fun declaration(): Stmt? = try {
-        if (match(VAR)) {
-            varDeclaration()
-        } else {
-            statement()
+        when {
+            match(FUN) -> function("function")
+            match(VAR) -> varDeclaration()
+            else -> statement()
         }
     } catch (error: ParseError) {
         synchronize()
@@ -48,6 +47,7 @@ class Parser(private val tokens: List<Token>) {
         match(FOR) -> forStatement()
         match(IF) -> ifStatement()
         match(PRINT) -> printStatement()
+        match(RETURN) -> returnStatement()
         match(WHILE) -> whileStatement()
         match(LEFT_BRACE) -> Stmt.Block(block())
         else -> expressionStatement()
@@ -98,6 +98,13 @@ class Parser(private val tokens: List<Token>) {
         return Stmt.Print(value)
     }
 
+    private fun returnStatement(): Stmt {
+        val keyword = previous()
+        val value = if (!check(SEMICOLON)) expression() else null
+        consume(SEMICOLON, "Expect ';' after return value.")
+        return Stmt.Return(keyword, value)
+    }
+
     private fun varDeclaration(): Stmt {
         val name = consume(IDENTIFIER, "Expect variable name.")
         val init = if (match(EQUAL)) expression() else null
@@ -117,6 +124,26 @@ class Parser(private val tokens: List<Token>) {
         val expr = expression()
         consume(SEMICOLON, "Expect ';' after expression.")
         return Stmt.Expression(expr)
+    }
+
+    private fun function(kind: String): Stmt.Function {
+        val name = consume(IDENTIFIER, "Expect $kind name.")
+        consume(LEFT_PAREN, "Expect '(' after $kind name.")
+
+        val parameters = mutableListOf<Token>()
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size >= 255) {
+                    error(peek(), "Cannot have more than 255 parameters.")
+                }
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+            } while (match(COMMA))
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.")
+
+        consume(LEFT_BRACE, "Expect '{' before $kind body.")
+        val body = block()
+        return Stmt.Function(name, parameters, body)
     }
 
     private fun block(): List<Stmt> {
@@ -246,7 +273,36 @@ class Parser(private val tokens: List<Token>) {
             throw parseError(operator, "Unary '${operator.lexeme}' expressions are not supported.")
         }
 
-        return primary()
+        return call()
+    }
+
+    private fun call(): Expr {
+        var expr = primary()
+
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr)
+            } else {
+                break
+            }
+        }
+
+        return expr
+    }
+
+    private fun finishCall(callee: Expr): Expr {
+        val args = mutableListOf<Expr>()
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (args.size >= 255) {
+                    error(peek(), "Cannot have more than 255 arguments.")
+                }
+                args.add(expression())
+            } while (match(COMMA))
+        }
+
+        val paren = consume(RIGHT_PAREN, "Expect ')' after arguments.")
+        return Call(callee, paren, args)
     }
 
     private fun primary(): Expr = when {
